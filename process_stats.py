@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
+#imports
 import psutil
 import elasticsearch
 import pandas as pd
@@ -42,40 +37,13 @@ df['Index'] = df.index
 
 
 
-
-
-
-
-
-# Converting df back to dictionary
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Uploading the dataframe to Elastic Search
 
 # Connecting to the Elastic search deployment via the cloud id
 es = Elasticsearch(hosts = 'http://localhost:9200/')
 
 
-
-
-
-keys = ['pid','name','num_threads','memory_percent','cpu_percent']
-
-
-
-
+# Defining the mappings for the index
 body = {
         "mappings":{
             
@@ -92,77 +60,30 @@ body = {
         }
 
 
-#es.indices.create(index = 'process_stats_5.0',body=body)
+# Creating an index with the above mappings
+es.indices.create(index = 'process_stats_5.0',body=body)
 
+# Converting the data into a form that is acceptable by ElasticSearch
 
+data = []
 
-'''
-keys = ['pid','memory_percent','cpu_percent','num_threads']
-
-
-def filterKeys(document):
-    return {key: document[key] for key in keys }
-
-def generator(df):
-    
-    df_iter = df.iterrows()
-    
-    
-    for index, document in df_iter:
-        
-        yield {
-            '_index': 'process_stats_5.0',
-            '_id' : f"{document['Index']}",
-            '_type':'_doc',
-            '_source': filterKeys(document)
-                
-                
-                
-            }
-        raise StopIteration
-        
-  '''
-l = []
-'''
 for index,row in df.iterrows():
 
-    d = {}
-    d['Index'] = row['Index']
-    d['pid'] = row['pid']
-    d['num_threads'] = row['num_threads']
-    d['cpu_percent'] = row['cpu_percent']
-    d['memory_percent'] = row['memory_percent']
+    proc = {}
+    proc['Index'] = row['Index']
+    proc['name'] = row['name']
+    proc['pid'] = row['pid']
+    proc['num_threads'] = row['num_threads']
+    proc['cpu_percent'] = row['cpu_percent']
+    proc['memory_percent'] = row['memory_percent']
     
-    l.append(d)
+    data.append(proc)
     
-
-for doc_i in l:
-    
-   
+# Sending each document/row to ElasticSearch
+for doc_i in data:
     es.index(index='process_stats_5.0',doc_type='_doc',id = doc_i['Index'],body=doc_i)
-'''
+
+# Sanity check for proper storage of data on ElasticSearch
+# Fetching the data item with ID 1
 res = es.get(index="process_stats_5.0", doc_type="_doc", id=1)
 print(res)
-
-    
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
